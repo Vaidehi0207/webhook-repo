@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error("Failed to fetch events:", error);
             eventsLog.innerHTML = '<p class="loading">Error loading events. Please check the console.</p>';
         }
+        // hello
     }
 
     // Fetch events immediately on page load
