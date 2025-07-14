@@ -2,14 +2,12 @@ import os
 from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient, DESCENDING
 from dotenv import load_dotenv
-from dateutil import parser # Import the date parser
+from dateutil import parser 
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 
-# --- Database Connection ---
 MONGO_URI = os.getenv('MONGO_URI')
 if not MONGO_URI:
     raise ValueError("No MONGO_URI found in environment variables")
@@ -18,7 +16,6 @@ client = MongoClient(MONGO_URI)
 db = client.github_events_db
 collection = db.events
 
-# --- Helper Function ---
 def standardize_timestamp(ts_string):
     """Parses any valid date string and converts it to ISO 8601 format in UTC."""
     if not ts_string:
@@ -27,7 +24,6 @@ def standardize_timestamp(ts_string):
     return dt_object.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
-# --- Routes ---
 @app.route('/')
 def index():
     """Serves the main HTML page for the UI."""
@@ -95,7 +91,7 @@ def get_events():
     return jsonify(events_list)
 
 
-# --- Main Execution ---
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
