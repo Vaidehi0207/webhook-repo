@@ -1,16 +1,29 @@
 document.addEventListener('DOMContentLoaded', function() {
     const eventsLog = document.getElementById('events-log');
 
+    // Display initial loading message
+    eventsLog.innerHTML = '<p class="loading">Loading events...</p>';
+
     // Function to format the timestamp into a readable string
     function formatTimestamp(isoString) {
+        // Handle potentially invalid or null timestamps
+        if (!isoString) return 'N/A';
         const date = new Date(isoString);
+        if (isNaN(date.getTime())) {
+            console.warn("Invalid timestamp string received:", isoString);
+            return 'Invalid Date';
+        }
+        // Use browser's local timezone for display, or keep 'UTC' for strictness
+        // The timestamp from your backend JSON includes +05:30, so Date() will parse it correctly.
+        // For display, it's often better to show in user's local time unless UTC is explicitly required.
+        // If you want to force UTC display as per problem statement, keep timeZone: 'UTC'
         return date.toLocaleString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'UTC',
+            timeZone: 'UTC', // Or omit for local time
             timeZoneName: 'short'
         });
     }
@@ -20,12 +33,13 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch('/events');
             if (!response.ok) {
-                throw new Error(HTTP error! status: ${response.status});
+                // FIXED: Using backticks for template literal
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             const events = await response.json();
 
             // Clear the log before rendering new events
-            eventsLog.innerHTML = ''; 
+            eventsLog.innerHTML = '';
 
             if (events.length === 0) {
                 eventsLog.innerHTML = '<p class="loading">No repository events found.</p>';
@@ -42,25 +56,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Format the message based on the action type
                 switch (event.action) {
                     case 'PUSH':
-                        message = <strong>${event.author}</strong> pushed to <strong>${event.to_branch}</strong> on ${formattedTimestamp};
+                        message = `<strong>${event.author}</strong> pushed to <strong>${event.to_branch}</strong> on ${formattedTimestamp}`;
                         break;
                     case 'PULL_REQUEST':
-                        message = <strong>${event.author}</strong> submitted a pull request from <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong> on ${formattedTimestamp};
+                        message = `<strong>${event.author}</strong> submitted a pull request from <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong> on ${formattedTimestamp}`;
                         break;
                     case 'MERGE':
-                        message = <strong>${event.author}</strong> merged branch <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong> on ${formattedTimestamp};
+                        message = `<strong>${event.author}</strong> merged branch <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong> on ${formattedTimestamp}`;
                         break;
                     default:
-                        message = 'An unknown event occurred.';
+                        message = `An unknown event occurred: Action '${event.action}' by <strong>${event.author}</strong> on ${formattedTimestamp}. Raw data: ${JSON.stringify(event)}`;
                 }
                 eventElement.innerHTML = message;
                 eventsLog.appendChild(eventElement);
             });
         } catch (error) {
             console.error("Failed to fetch events:", error);
-            eventsLog.innerHTML = '<p class="loading">Error loading events. Please check the console.</p>';
+            // Changed class to 'error' - ensure your CSS also styles '.error'
+            eventsLog.innerHTML = '<p class="error">Error loading events. Please check the console.</p>';
         }
-        // hello
     }
 
     // Fetch events immediately on page load
